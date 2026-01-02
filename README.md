@@ -4,12 +4,6 @@ This is the Flutter implementation of the requested hiring test.
 
 ## Submission Details
 
-### 1. Expected Time Frame
-
-**2 Days**
-
-
-
 ### 3. APK
 
 The built APK can be found at: `build/app/outputs/flutter-apk/app-release.apk`
