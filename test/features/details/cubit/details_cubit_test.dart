@@ -1,13 +1,28 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:hiring_test_app/features/details/cubit/details_cubit.dart';
 import 'package:hiring_test_app/features/details/cubit/details_state.dart';
+import 'package:hiring_test_app/features/home/data/stadium_repository.dart';
+
+class MockStadiumRepository extends Mock implements StadiumRepository {}
 
 void main() {
   late DetailsCubit detailsCubit;
+  late MockStadiumRepository mockRepository;
+
+  final tSports = [
+    'Football',
+    'Tennis',
+    'Ping Pong',
+    'Volleyball',
+    'Basketball',
+  ];
 
   setUp(() {
-    detailsCubit = DetailsCubit(autoLoad: false);
+    mockRepository = MockStadiumRepository();
+    when(() => mockRepository.getSports()).thenAnswer((_) async => tSports);
+    detailsCubit = DetailsCubit(mockRepository, autoLoad: false);
   });
 
   tearDown(() {
@@ -15,28 +30,16 @@ void main() {
   });
 
   group('DetailsCubit', () {
-    // Initial state test removed as auto-loading makes it transient/flaky in unit tests
-    // The blocTest below covers the initialization flow covers [loading, loaded]
-
     blocTest<DetailsCubit, DetailsState>(
-      'emits [loading, loaded] when initialized',
-      build: () => DetailsCubit(), // Explicitly enable for this test
-      act: (cubit) async {
-        // Wait for the async initialization to complete
-        await Future<void>.delayed(const Duration(milliseconds: 600));
+      'emits [loading, loaded] when retry is called',
+      build: () {
+        when(() => mockRepository.getSports()).thenAnswer((_) async => tSports);
+        return DetailsCubit(mockRepository, autoLoad: false);
       },
+      act: (cubit) => cubit.retry(),
       expect: () => [
         const DetailsState.loading(),
-        const DetailsState.loaded(
-          sports: [
-            'Football',
-            'Tennis',
-            'Ping Pong',
-            'Volleyball',
-            'Basketball',
-          ], // Updated list
-          selectedSport: 'Football',
-        ),
+        DetailsState.loaded(sports: tSports, selectedSport: tSports.first),
       ],
     );
 
@@ -53,6 +56,21 @@ void main() {
           sports: ['Football', 'Tennis'],
           selectedSport: 'Tennis',
         ),
+      ],
+    );
+
+    blocTest<DetailsCubit, DetailsState>(
+      'emits [loading, error] when repository fails',
+      build: () {
+        when(
+          () => mockRepository.getSports(),
+        ).thenThrow(Exception('Failed to load'));
+        return DetailsCubit(mockRepository, autoLoad: false);
+      },
+      act: (cubit) => cubit.retry(),
+      expect: () => [
+        const DetailsState.loading(),
+        const DetailsState.error('Exception: Failed to load'),
       ],
     );
   });

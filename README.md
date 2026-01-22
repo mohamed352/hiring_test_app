@@ -26,7 +26,12 @@ Here are the designs we replicated:
 
 ![Screen 2 Ref](assets/images/PAGE%202%20TO%20REPLICATE.png)
 
+## Documentation
+
+For a detailed technical breakdown of the project, architecture, and features, please refer to [DOCS.md](./DOCS.md).
+
 ## How to Run
 
 1. `flutter pub get`
-2. `flutter run`
+2. `dart run build_runner build --delete-conflicting-outputs`
+3. `flutter run`

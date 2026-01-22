@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hiring_test_app/core/theme/color_manager.dart';
 import 'package:hiring_test_app/core/routes/app_router.dart';
+import 'package:hiring_test_app/features/home/data/stadium_repository.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    RepositoryProvider<StadiumRepository>(
+      create: (_) => StadiumRepositoryImpl(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -23,7 +30,7 @@ class MyApp extends StatelessWidget {
           surface: ColorManager.background,
         ),
         useMaterial3: true,
-        textTheme: GoogleFonts.poppinsTextTheme(),
+        textTheme: GoogleFonts.outfitTextTheme(),
         scaffoldBackgroundColor: ColorManager.background,
       ),
       routerConfig: appRouter,

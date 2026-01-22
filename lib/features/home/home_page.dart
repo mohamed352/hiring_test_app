@@ -5,6 +5,7 @@ import 'package:hiring_test_app/core/theme/color_manager.dart';
 import 'package:hiring_test_app/core/logger/app_logger.dart';
 import 'package:hiring_test_app/features/home/cubit/home_cubit.dart';
 import 'package:hiring_test_app/features/home/cubit/home_state.dart';
+import 'package:hiring_test_app/features/home/data/stadium_repository.dart';
 
 import 'widgets/home_header.dart';
 import 'widgets/hero_banner.dart';
@@ -17,7 +18,10 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (_) => HomeCubit(), child: const HomeView());
+    return BlocProvider(
+      create: (context) => HomeCubit(context.read<StadiumRepository>()),
+      child: const HomeView(),
+    );
   }
 }
 
@@ -29,20 +33,32 @@ class HomeView extends StatelessWidget {
     return Scaffold(
       backgroundColor: ColorManager.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.width * 0.05,
-            vertical: context.height * 0.02,
-          ),
-          child: BlocConsumer<HomeCubit, HomeState>(
-            listener: (context, state) {
-              state.maybeWhen(error: (msg) => log.e(msg), orElse: () {});
-            },
-            builder: (context, state) {
-              return state.maybeWhen(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                loaded: (cities, selectedCity, stadiums) {
-                  return Column(
+        child: BlocConsumer<HomeCubit, HomeState>(
+          listener: (context, state) {
+            state.maybeWhen(
+              error: (msg) {
+                log.e(msg);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(msg),
+                    backgroundColor: ColorManager.error,
+                  ),
+                );
+              },
+              orElse: () {},
+            );
+          },
+          builder: (context, state) {
+            return state.maybeWhen(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (msg) => _ErrorWidget(message: msg),
+              loaded: (cities, selectedCity, stadiums) {
+                return SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.width * 0.05,
+                    vertical: context.height * 0.02,
+                  ),
+                  child: Column(
                     children: [
                       const HomeHeader(),
                       SizedBox(height: context.height * 0.025),
@@ -57,15 +73,44 @@ class HomeView extends StatelessWidget {
                       SizedBox(height: context.height * 0.03),
                       const StadiumList(),
                     ],
-                  );
-                },
-                orElse: () => const SizedBox.shrink(),
-              );
-            },
-          ),
+                  ),
+                );
+              },
+              orElse: () => const SizedBox.shrink(),
+            );
+          },
         ),
       ),
       bottomNavigationBar: const CustomBottomNav(),
+    );
+  }
+}
+
+class _ErrorWidget extends StatelessWidget {
+  const _ErrorWidget({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: ColorManager.error),
+          const SizedBox(height: 16),
+          Text(
+            'Something went wrong!',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => context.read<HomeCubit>().retry(),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 }

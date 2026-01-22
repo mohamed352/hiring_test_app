@@ -8,5 +8,4 @@ class ImageAssets {
   static const String stadiumHeader = '$imagePath/stduim.png';
   static const String banner = '$imagePath/banner.png';
   static const String navBarMiddle = '$imagePath/nav_bar_midel_icon.png';
-  static const String searchFirstCard = '$imagePath/search_first_card.png';
 }

@@ -1,28 +1,34 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hiring_test_app/core/logger/app_logger.dart';
+import 'package:hiring_test_app/features/home/data/stadium_repository.dart';
 import 'details_state.dart';
 
 class DetailsCubit extends Cubit<DetailsState> {
-  DetailsCubit({bool autoLoad = true}) : super(const DetailsState.initial()) {
+  DetailsCubit(this._repository, {bool autoLoad = true})
+    : super(const DetailsState.initial()) {
     if (autoLoad) {
-      Future.microtask(_loadInitialData);
+      _loadInitialData();
     }
   }
+  final StadiumRepository _repository;
 
   Future<void> _loadInitialData() async {
     log.d('Loading details data', tag: LogTags.bloc);
     emit(const DetailsState.loading());
-    // Simulate network delay
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (isClosed) return;
-    final sports = [
-      'Football',
-      'Tennis',
-      'Ping Pong',
-      'Volleyball',
-      'Basketball',
-    ];
-    emit(DetailsState.loaded(sports: sports, selectedSport: sports.first));
+
+    try {
+      final sports = await _repository.getSports();
+      if (isClosed) return;
+      emit(
+        DetailsState.loaded(
+          sports: sports,
+          selectedSport: sports.isNotEmpty ? sports.first : '',
+        ),
+      );
+    } catch (e) {
+      log.e('Failed to load sports data: $e', tag: LogTags.bloc);
+      emit(DetailsState.error(e.toString()));
+    }
   }
 
   void selectSport(String sport) {
@@ -34,4 +40,6 @@ class DetailsCubit extends Cubit<DetailsState> {
       orElse: () {},
     );
   }
+
+  void retry() => _loadInitialData();
 }

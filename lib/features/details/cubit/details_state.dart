@@ -10,4 +10,5 @@ class DetailsState with _$DetailsState {
     required List<String> sports,
     required String selectedSport,
   }) = _Loaded;
+  const factory DetailsState.error(String message) = _Error;
 }
